@@ -23,6 +23,14 @@ date_default_timezone_set('America/Bogota'); // Ajusta a tu zona horaria
 // Para tokens y seguridad
 define('TOKEN_EXPIRATION_HOURS', 1); // Tiempo de expiración para tokens de recuperación en horas
 
+// Configuración de Funcionalidad SMTP (para activar/desactivar envío de emails y flujos dependientes)
+// Lee la variable de entorno 'SMTP_FUNCTION'. Si no está definida, usa 'ON' por defecto.
+// Valores posibles: 'ON' (funcionalidad de email activada), 'OFF' (funcionalidad de email desactivada)
+// Cuando está en 'OFF':
+//  - Registro crea usuarios activados directamente.
+//  - Recuperación de contraseña se deshabilita.
+define('SMTP_FUNCTION_STATUS', getenv('SMTP_FUNCTION') ?: 'ON');
+
 // Habilitar/Deshabilitar errores de PHP para desarrollo/producción
 // En desarrollo:
 ini_set('display_errors', 1);

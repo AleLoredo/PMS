@@ -13,13 +13,17 @@ $showForm = false;
 $message = '';
 $message_type = 'info'; // 'success', 'danger', 'warning'
 
-if (!$token) {
+$smtp_enabled = (defined('SMTP_FUNCTION_STATUS') && SMTP_FUNCTION_STATUS === 'ON');
+
+if (!$smtp_enabled) {
+    $message = "El sistema de recuperación de contraseña ha sido deshabilitado por el administrador del sistema.";
+    $message_type = 'warning';
+    $showForm = false;
+} elseif (!$token) {
     $message = "Token no proporcionado o inválido.";
     $message_type = 'danger';
-    // Redirigir a login o mostrar mensaje y enlace.
-    // Para este caso, mostraremos el mensaje en la misma página.
 } else {
-    // Validar el token
+    // Validar el token solo si SMTP está habilitado y hay un token
     $stmt = $conn->prepare("SELECT id_user, email, token_recupero_expira FROM systemusers WHERE token_recupero = ? LIMIT 1");
     $stmt->bind_param("s", $token);
     $stmt->execute();
@@ -32,15 +36,9 @@ if (!$token) {
         if (time() > $token_expira_timestamp) {
             $message = "El token de restablecimiento ha expirado. Por favor, solicita uno nuevo.";
             $message_type = 'warning';
-            // Opcional: Invalidar el token en la BD aquí si se desea.
-            // $expire_token_stmt = $conn->prepare("UPDATE systemusers SET token_recupero = NULL, token_recupero_expira = NULL WHERE token_recupero = ?");
-            // $expire_token_stmt->bind_param("s", $token);
-            // $expire_token_stmt->execute();
-            // $expire_token_stmt->close();
         } else {
-            // Token válido y no expirado, mostrar formulario
             $showForm = true;
-            $_SESSION['reset_token'] = $token; // Guardar token en sesión para usarlo en handle_reset_password.php
+            $_SESSION['reset_token'] = $token;
         }
     } else {
         $message = "Token inválido o ya utilizado. Por favor, asegúrate de usar el enlace correcto o solicita uno nuevo.";
@@ -50,6 +48,7 @@ if (!$token) {
 }
 
 // Mensajes de sesión de handle_reset_password.php
+// Estos mensajes (éxito o error del intento de reseteo) tienen prioridad si el formulario se mostró.
 $errors_reset = $_SESSION['reset_errors'] ?? [];
 $success_message_reset = $_SESSION['reset_success_message'] ?? '';
 

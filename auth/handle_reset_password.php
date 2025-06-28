@@ -9,6 +9,19 @@ require_once $baseDir . '/includes/db_connection.php';
 
 $_SESSION['reset_errors'] = [];
 
+// Leer el estado de SMTP_FUNCTION_STATUS de config.php
+$smtp_enabled = (defined('SMTP_FUNCTION_STATUS') && SMTP_FUNCTION_STATUS === 'ON');
+
+if (!$smtp_enabled) {
+    // Si SMTP está deshabilitado, no procesar el reseteo.
+    // Esta situación no debería ocurrir si reset_password.php ya bloquea el formulario.
+    $_SESSION['reset_errors'][] = "El sistema de recuperación de contraseña está deshabilitado.";
+    // No hay un token GET para pasar aquí si el flujo es correcto,
+    // pero si alguien llega aquí manipulando, redirigir a forgot_password que mostrará el mensaje.
+    header('Location: forgot_password.php');
+    exit;
+}
+
 // El token debe estar en la sesión, puesto allí por reset_password.php
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['reset_token'])) {
     $token = $_SESSION['reset_token'];
