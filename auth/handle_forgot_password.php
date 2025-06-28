@@ -11,6 +11,17 @@ require_once $baseDir . '/helpers/email_sender.php'; // Para enviar el email de 
 $_SESSION['fp_errors'] = [];
 $_SESSION['fp_form_data'] = ['email' => $_POST['email'] ?? ''];
 
+// Leer el estado de SMTP_FUNCTION_STATUS de config.php
+$smtp_enabled = (defined('SMTP_FUNCTION_STATUS') && SMTP_FUNCTION_STATUS === 'ON');
+
+if (!$smtp_enabled) {
+    // Si SMTP está deshabilitado, no se debería poder llegar aquí si el formulario está oculto.
+    // Pero como defensa, establecemos un error y redirigimos.
+    $_SESSION['fp_errors'][] = "El sistema de recuperación de contraseña está deshabilitado.";
+    header('Location: forgot_password.php');
+    exit;
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST['email'] ?? '');
 

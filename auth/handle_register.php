@@ -92,38 +92,62 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // 2. Hashear la contraseña
         $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
-        // 3. Generar token de activación único
-        $token_activacion = bin2hex(random_bytes(32)); // Token de 64 caracteres hexadecimales
+        // Leer el estado de SMTP_FUNCTION_STATUS de config.php
+        $smtp_enabled = (defined('SMTP_FUNCTION_STATUS') && SMTP_FUNCTION_STATUS === 'ON');
 
-        // 4. Insertar en la tabla 'systemusers'
-        $stmt_systemusers = $conn->prepare("INSERT INTO systemusers (id_contact, email, password_hash, token_activacion, activado) VALUES (?, ?, ?, ?, FALSE)");
-        $stmt_systemusers->bind_param("isss", $id_contact, $email, $password_hash, $token_activacion);
-        $stmt_systemusers->execute();
-        $stmt_systemusers->close();
+        if ($smtp_enabled) {
+            // Flujo normal con activación por email
+            $token_activacion = bin2hex(random_bytes(32));
+            $activado_directamente = FALSE;
 
-        // 5. Enviar email de activación usando AWS SES
-        $activation_link = APP_URL . "/auth/activate.php?token=" . $token_activacion;
-        $email_subject = "Activa tu cuenta en " . APP_NAME;
-        $email_body = "<p>Hola " . htmlspecialchars($nombre) . ",</p>";
-        $email_body .= "<p>Gracias por registrarte en " . APP_NAME . ". Por favor, haz clic en el siguiente enlace para activar tu cuenta:</p>";
-        $email_body .= "<p><a href='" . $activation_link . "'>" . $activation_link . "</a></p>";
-        $email_body .= "<p>Si no te registraste, por favor ignora este correo.</p>";
-        $email_body .= "<p>Saludos,<br>El equipo de " . APP_NAME . "</p>";
+            // Insertar en la tabla 'systemusers' con token y activado = FALSE
+            $stmt_systemusers = $conn->prepare("INSERT INTO systemusers (id_contact, email, password_hash, token_activacion, activado) VALUES (?, ?, ?, ?, ?)");
+            $stmt_systemusers->bind_param("isssi", $id_contact, $email, $password_hash, $token_activacion, $activado_directamente);
+            $stmt_systemusers->execute();
+            $stmt_systemusers->close();
 
-        if (sendCustomEmail($email, $email_subject, $email_body)) {
-            // Email enviado con éxito
-            $conn->commit(); // Confirmar la transacción
-            unset($_SESSION['form_data']); // Limpiar datos del formulario en sesión
-            $_SESSION['success_message'] = "¡Registro exitoso! Se ha enviado un correo de activación a " . htmlspecialchars($email) . ". Por favor, revisa tu bandeja de entrada (y spam) para completar el proceso.";
+            // Enviar email de activación usando AWS SES
+            $activation_link = APP_URL . "/auth/activate.php?token=" . $token_activacion;
+            $email_subject = "Activa tu cuenta en " . APP_NAME;
+            $email_body = "<p>Hola " . htmlspecialchars($nombre) . ",</p>";
+            $email_body .= "<p>Gracias por registrarte en " . APP_NAME . ". Por favor, haz clic en el siguiente enlace para activar tu cuenta:</p>";
+            $email_body .= "<p><a href='" . $activation_link . "'>" . $activation_link . "</a></p>";
+            $email_body .= "<p>Si no te registraste, por favor ignora este correo.</p>";
+            $email_body .= "<p>Saludos,<br>El equipo de " . APP_NAME . "</p>";
+
+            if (sendCustomEmail($email, $email_subject, $email_body)) {
+                $conn->commit();
+                unset($_SESSION['form_data']);
+                $_SESSION['success_message'] = "¡Registro exitoso! Se ha enviado un correo de activación a " . htmlspecialchars($email) . ". Por favor, revisa tu bandeja de entrada (y spam).";
+            } else {
+                $conn->rollback();
+                $_SESSION['errors'][] = "Hubo un problema al enviar el correo de activación. Por favor, intenta registrarte más tarde o contacta con el soporte.";
+                error_log("Error al enviar email de activación para: $email. Token: $token_activacion");
+            }
         } else {
-            // Error al enviar email
-            $conn->rollback(); // Revertir la transacción
-            $_SESSION['errors'][] = "Hubo un problema al enviar el correo de activación. Por favor, intenta registrarte más tarde o contacta con el soporte.";
-            error_log("Error al enviar email de activación para: $email. Token: $token_activacion");
+            // SMTP_FUNCTION_STATUS es 'OFF', registrar usuario como activado directamente
+            $activado_directamente = TRUE;
+            $token_activacion = null; // No se necesita token de activación
+
+            // Insertar en la tabla 'systemusers' con activado = TRUE y sin token
+            $stmt_systemusers = $conn->prepare("INSERT INTO systemusers (id_contact, email, password_hash, token_activacion, activado) VALUES (?, ?, ?, ?, ?)");
+            $stmt_systemusers->bind_param("isssi", $id_contact, $email, $password_hash, $token_activacion, $activado_directamente);
+            $stmt_systemusers->execute();
+
+            if ($stmt_systemusers->affected_rows > 0) {
+                $conn->commit();
+                unset($_SESSION['form_data']);
+                $_SESSION['success_message'] = "¡Registro exitoso! Tu cuenta ha sido creada y activada directamente. Ya puedes <a href='login.php'>iniciar sesión</a>.";
+            } else {
+                $conn->rollback();
+                $_SESSION['errors'][] = "Hubo un problema al crear tu cuenta. Por favor, intenta registrarte más tarde.";
+                error_log("Error al insertar usuario activado directamente para: $email");
+            }
+            $stmt_systemusers->close();
         }
 
     } catch (Exception $e) {
-        $conn->rollback(); // Revertir la transacción en caso de cualquier error
+        $conn->rollback(); // Revertir la transacción en caso de cualquier error en la lógica try
         $_SESSION['errors'][] = "Ocurrió un error durante el proceso de registro: " . $e->getMessage();
         error_log("Error en handle_register: " . $e->getMessage());
     }

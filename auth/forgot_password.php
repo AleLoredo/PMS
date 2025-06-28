@@ -11,6 +11,7 @@ if (file_exists($baseDir . '/config.php')) {
 }
 
 $pageTitle = "Recuperar Contraseña";
+$smtp_enabled = (defined('SMTP_FUNCTION_STATUS') && SMTP_FUNCTION_STATUS === 'ON');
 
 // Mensajes de sesión para feedback
 $errors = $_SESSION['fp_errors'] ?? [];
@@ -56,32 +57,38 @@ unset($_SESSION['fp_form_data']);
                         <h3 class="text-center"><?php echo htmlspecialchars($pageTitle); ?></h3>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted text-center">Ingresa tu dirección de correo electrónico y te enviaremos un enlace para restablecer tu contraseña.</p>
-
-                        <?php if (!empty($success_message)): ?>
-                            <div class="alert alert-success"><?php echo htmlspecialchars($success_message); ?></div>
-                        <?php endif; ?>
-
-                        <?php if (!empty($errors)): ?>
-                            <div class="alert alert-danger">
-                                <ul>
-                                    <?php foreach ($errors as $error): ?>
-                                        <li><?php echo htmlspecialchars($error); ?></li>
-                                    <?php endforeach; ?>
-                                </ul>
+                        <?php if (!$smtp_enabled): ?>
+                            <div class="alert alert-warning" role="alert">
+                                El sistema de recuperación de contraseña ha sido deshabilitado por el administrador del sistema.
                             </div>
-                        <?php endif; ?>
+                        <?php else: ?>
+                            <p class="text-muted text-center">Ingresa tu dirección de correo electrónico y te enviaremos un enlace para restablecer tu contraseña.</p>
 
-                        <?php if (empty($success_message)): // Solo mostrar el formulario si no hay mensaje de éxito ?>
-                        <form action="handle_forgot_password.php" method="POST">
-                            <div class="form-group">
-                                <label for="email">Correo Electrónico</label>
-                                <input type="email" class="form-control" id="email" name="email"
-                                       value="<?php echo htmlspecialchars($form_data['email'] ?? ''); ?>" required autofocus>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-block">Enviar Enlace de Recuperación</button>
-                        </form>
-                        <?php endif; ?>
+                            <?php if (!empty($success_message)): ?>
+                                <div class="alert alert-success"><?php echo htmlspecialchars($success_message); ?></div>
+                            <?php endif; ?>
+
+                            <?php if (!empty($errors)): ?>
+                                <div class="alert alert-danger">
+                                    <ul>
+                                        <?php foreach ($errors as $error): ?>
+                                            <li><?php echo htmlspecialchars($error); ?></li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if (empty($success_message)): // Solo mostrar el formulario si no hay mensaje de éxito y SMTP está habilitado ?>
+                            <form action="handle_forgot_password.php" method="POST">
+                                <div class="form-group">
+                                    <label for="email">Correo Electrónico</label>
+                                    <input type="email" class="form-control" id="email" name="email"
+                                           value="<?php echo htmlspecialchars($form_data['email'] ?? ''); ?>" required autofocus>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block">Enviar Enlace de Recuperación</button>
+                            </form>
+                            <?php endif; ?>
+                        <?php endif; // Cierre del if $smtp_enabled ?>
                     </div>
                     <div class="card-footer text-center">
                         <small><a href="login.php">Volver a Iniciar Sesión</a></small>
