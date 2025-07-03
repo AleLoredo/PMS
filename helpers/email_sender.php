@@ -17,15 +17,12 @@ if (!defined('AWS_SES_HOST')) {
     }
 }
 
-// Cargar las clases de PHPMailer. Ajusta la ruta según la ubicación de tu carpeta vendor.
-// La estructura de PHPMailer a partir de v6 es vendor/phpmailer/phpmailer/src/
-$phpMailerBaseDir = dirname(__DIR__) . '/vendor/phpmailer/phpmailer/';
-require_once $phpMailerBaseDir . 'src/Exception.php';
-require_once $phpMailerBaseDir . 'src/PHPMailer.php';
-require_once $phpMailerBaseDir . 'src/SMTP.php';
+// No es necesario cargar manualmente las clases de PHPMailer si se usa el autoloader de Composer.
+// vendor/autoload.php (incluido en config.php) se encargará de esto.
+// Las sentencias `use` al principio del archivo son suficientes.
 
 /**
- * Envía un correo electrónico utilizando AWS SES a través de PHPMailer.
+ * Envía un correo electrónico utilizando AWS SES (u otro SMTP configurado) a través de PHPMailer.
  *
  * @param string $to Destinatario del correo.
  * @param string $subject Asunto del correo.
