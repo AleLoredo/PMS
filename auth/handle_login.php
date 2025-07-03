@@ -3,7 +3,8 @@
 // No iniciar sesión aquí prematuramente.
 $baseDir = dirname(__DIR__);
 require_once $baseDir . '/config.php'; // Esto ya debería iniciar la sesión si es necesario.
-require_once $baseDir . '/includes/db_connection.php'; // Para interactuar con la BD
+require_once $baseDir . '/includes/db_connection.php';
+require_once $baseDir . '/includes/rbac_functions.php'; // Incluir funciones RBAC
 
 $_SESSION['login_errors'] = [];
 $_SESSION['form_data_login'] = ['email' => $_POST['email'] ?? '']; // Guardar email para repoblar
@@ -54,6 +55,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['user_email'] = $user['email'];
                 $_SESSION['user_nombre'] = $user['nombre'];
                 $_SESSION['user_apellido'] = $user['apellido'];
+
+                // Cargar roles y permisos en la sesión
+                $_SESSION['user_roles'] = get_user_roles($user['id_user'], $conn);
+                $_SESSION['user_permissions'] = get_user_permissions_flat($user['id_user'], $conn);
 
                 // Limpiar datos de formulario de login de la sesión
                 unset($_SESSION['form_data_login']);

@@ -1,7 +1,6 @@
 /vendor/
-# config.php
+config.php
 /uploads/
 *.log
 .DS_Store
 .env
-.vscode/settings.json
