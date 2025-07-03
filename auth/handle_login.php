@@ -1,10 +1,8 @@
 <?php
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
+// config.php se encarga de iniciar la sesión después de configurar los parámetros.
+// No iniciar sesión aquí prematuramente.
 $baseDir = dirname(__DIR__);
-require_once $baseDir . '/config.php';
+require_once $baseDir . '/config.php'; // Esto ya debería iniciar la sesión si es necesario.
 require_once $baseDir . '/includes/db_connection.php'; // Para interactuar con la BD
 
 $_SESSION['login_errors'] = [];

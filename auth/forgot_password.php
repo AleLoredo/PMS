@@ -1,13 +1,13 @@
 <?php
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
+// config.php se encarga de iniciar la sesión después de configurar los parámetros.
+// No iniciar sesión aquí prematuramente.
 $baseDir = dirname(__DIR__);
 if (file_exists($baseDir . '/config.php')) {
-    require_once $baseDir . '/config.php';
+    require_once $baseDir . '/config.php'; // Esto ya debería iniciar la sesión si es necesario.
 } else {
-    die('El archivo de configuración no se encuentra.');
+    // Si config.php no existe, es un error fatal.
+    // session_start(); // No tendría sentido iniciar sesión si la config base falla.
+    die('El archivo de configuración principal (config.php) no se encuentra. La aplicación no puede continuar.');
 }
 
 $pageTitle = "Recuperar Contraseña";

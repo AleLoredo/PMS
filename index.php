@@ -1,16 +1,12 @@
 <?php
 // index.php (Pantalla Principal / Dashboard)
 
-// Iniciar sesión y cargar configuración primero
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Cargar configuración y funciones comunes
+// Cargar configuración. config.php se encarga de iniciar la sesión DESPUÉS de setear los parámetros.
 require_once __DIR__ . '/config.php';
 // require_once __DIR__ . '/includes/functions.php'; // Si tienes funciones helper adicionales
 
 // Verificar si el usuario está logueado. Si no, redirigir a login.php.
+// Ahora la sesión ya debería estar iniciada por config.php si no lo estaba.
 if (!isset($_SESSION['user_id'])) {
     header('Location: ' . APP_URL . '/auth/login.php');
     exit;
