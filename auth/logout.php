@@ -1,17 +1,18 @@
 <?php
-// Iniciar la sesión para poder destruirla.
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+// config.php se encarga de iniciar la sesión después de configurar los parámetros.
+// No iniciar sesión aquí explícitamente ANTES de incluir config.php,
+// pero sí necesitamos asegurarnos de que la sesión esté activa para poder destruirla.
+// config.php ya se encarga de iniciarla si no está activa.
 
 // Cargar la configuración para obtener APP_URL para la redirección.
-// Es una buena práctica tener una forma consistente de acceder a la raíz del proyecto.
 $baseDir = dirname(__DIR__);
 if (file_exists($baseDir . '/config.php')) {
-    require_once $baseDir . '/config.php';
+    require_once $baseDir . '/config.php'; // Esto asegura que la sesión está iniciada y configurada.
     $redirect_url = APP_URL . '/auth/login.php';
 } else {
     // Fallback si config.php no está disponible.
+    // Si config.php no está, es probable que APP_URL tampoco esté definido.
+    // Intentar iniciar una sesión aquí sería problemático sin las configuraciones.
     // Esto no debería suceder en una aplicación bien configurada.
     // Redirigir a una ruta relativa si APP_URL no está disponible.
     $redirect_url = 'login.php';

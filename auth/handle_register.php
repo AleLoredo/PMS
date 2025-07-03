@@ -1,17 +1,16 @@
 <?php
-// Iniciar sesión para poder usar variables de sesión para mensajes y datos de formulario
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+// config.php se encarga de iniciar la sesión después de configurar los parámetros.
+// No iniciar sesión aquí prematuramente.
 
 // Incluir archivos necesarios
 // __DIR__ es el directorio actual (auth), dirname(__DIR__) es el directorio raíz del proyecto.
 $baseDir = dirname(__DIR__);
-require_once $baseDir . '/config.php';
+require_once $baseDir . '/config.php'; // Esto ya debería iniciar la sesión si es necesario.
 require_once $baseDir . '/includes/db_connection.php';
 require_once $baseDir . '/helpers/email_sender.php'; // Para enviar el email de activación
 
 // Inicializar arrays para errores y datos de formulario
+// Las variables de sesión ya deberían estar disponibles gracias a config.php
 $_SESSION['errors'] = [];
 $_SESSION['form_data'] = $_POST; // Guardar los datos del POST para repoblar el formulario si hay error
 

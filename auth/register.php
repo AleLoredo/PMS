@@ -1,21 +1,19 @@
 <?php
-// Incluir config.php al inicio para asegurar que las sesiones y otras configuraciones estén disponibles.
-// Es una buena práctica tener un archivo central de inicialización o configuración.
-if (file_exists('../config.php')) {
-    require_once '../config.php';
+// config.php se encarga de iniciar la sesión después de configurar los parámetros.
+// No iniciar sesión aquí prematuramente.
+$baseDir = dirname(__DIR__); // Raíz del proyecto
+if (file_exists($baseDir . '/config.php')) {
+    require_once $baseDir . '/config.php'; // Esto ya debería iniciar la sesión si es necesario.
 } else {
-    die('El archivo de configuración no se encuentra. Por favor, copie config-sample.php a config.php y configurelo.');
+    // Si config.php no existe, es un error fatal.
+    die('El archivo de configuración principal (config.php) no se encuentra. La aplicación no puede continuar.');
 }
 
-// Incluir header temporalmente aquí, idealmente se gestionaría con un sistema de plantillas o includes más robusto.
-if (file_exists('../templates/header.php')) {
-    // Pasamos el título de la página al header
-    $pageTitle = "Registro de Usuario";
-    // Podríamos pasar otras variables si fueran necesarias para el header
-    // include '../templates/header.php';
-}
+// Título de la página para la plantilla/navegación
+$pageTitle = "Registro de Usuario";
 
 // Lógica para manejar mensajes (éxito o error) que podrían venir de handle_register.php
+// Las variables de sesión ya deberían estar disponibles gracias a config.php
 $errors = $_SESSION['errors'] ?? [];
 $success_message = $_SESSION['success_message'] ?? '';
 $form_data = $_SESSION['form_data'] ?? [];
