@@ -1,5 +1,12 @@
 -- Base de datos: gestor_salud
+-- Este script crea la base de datos y las tablas necesarias para el sistema de gestión de salud
 
+-- Opcional: elimina la base de datos si ya existe (solo para desarrollo)
+-- DROP DATABASE IF EXISTS gestor_salud;
+
+CREATE DATABASE IF NOT EXISTS gestor_salud CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE gestor_salud;
 -- Tabla para almacenar información de contacto de los usuarios
 CREATE TABLE contacts (
     id_contact INT AUTO_INCREMENT PRIMARY KEY,
